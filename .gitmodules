@@ -1,0 +1,3 @@
+[submodule "software-design"]
+	path = software-design
+	url = git@github.com:akirakozov/software-design.git
