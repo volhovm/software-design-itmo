@@ -1,0 +1,10 @@
+resolver: lts-7.2
+packages:
+- '.'
+nix:
+  enable: false
+  shell-file: shell.nix
+extra-deps:
+- time-units-1.0.0
+flags: {}
+extra-package-dbs: []
