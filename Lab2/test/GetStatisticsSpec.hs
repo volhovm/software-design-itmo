@@ -32,19 +32,18 @@ newtype TwitterMock a =
 
 
 call' :: (FromJSON b) => APIRequest c a -> TwitterMock b
-call' (APIRequestGet searchPath params)
-        | "/search/tweets.json" `isSuffixOf` searchPath = do
-              let count = fromInteger . fromMaybe 15 $ unPVInteger . snd <$>
-                      (find ((== "count") . fst) params)
-                  maxId = fromMaybe 10000000000000 $
-                      unPVInteger . snd <$> (find ((== "max_id") . fst) params)
-                  query = unPVString . snd . fromJust $ (find ((== "q") . fst) params)
-                  hashtag = fromJust $ find ("#" `T.isPrefixOf`) $ T.words query
-              tweets <- filter ((hashtag `T.isInfixOf`) . simpleText) .
-                        filter ((<= maxId) . simpleId) .
-                        sortBy (flip compare) <$> get
-              pure $ fromJust $ decode $ encode $
-                  SearchResult (take count $ map toStatus tweets) trashMetadata
+call' (APIRequestGet searchPath params) | "/search/tweets.json" `isSuffixOf` searchPath = do
+    let count = fromInteger . fromMaybe 15 $ unPVInteger . snd <$>
+            (find ((== "count") . fst) params)
+        maxId = fromMaybe 10000000000000 $
+            unPVInteger . snd <$> (find ((== "max_id") . fst) params)
+        query = unPVString . snd . fromJust $ (find ((== "q") . fst) params)
+        hashtag = fromJust $ find ("#" `T.isPrefixOf`) $ T.words query
+    tweets <- filter ((hashtag `T.isInfixOf`) . simpleText) .
+              filter ((<= maxId) . simpleId) .
+              sortBy (flip compare) <$> get
+    pure $ fromJust $ decode $ encode $
+        SearchResult (take count $ map toStatus tweets) trashMetadata
 call' m = error $ "Mock doesn't support this method: " ++ show m
 
 instance MonadTwitter TwitterMock where
@@ -89,6 +88,7 @@ spec = describe "Statistic gathering function" $ do
         (hours > 1 && hours < 13) ==>
         ioProperty (do stats <- runStatistics tweets hours
                        pure $ sum stats == len)
+
   where
     hashtag = "#hashtag"
     runStatistics state h = evalStateT (fromTwitterMock $ getStatistics False hashtag h) state
