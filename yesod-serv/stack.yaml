@@ -1,0 +1,5 @@
+resolver: lts-7.9
+packages:
+- '.'
+nix:
+  shell-file: shell.nix
