@@ -3,13 +3,11 @@
 
 name:                yesod-serv
 version:             0.1.0.0
--- synopsis:
--- description:
+synopsis:            Primitive MVC-oriented todo-list server
 license:             GPL-3
 license-file:        LICENSE
 author:              Mikhail Volkhov
 maintainer:          volhovm.cs@gmail.com
--- copyright:
 category:            Web
 build-type:          Simple
 extra-source-files:  ChangeLog.md
@@ -17,7 +15,7 @@ cabal-version:       >=1.10
 
 executable yesod-serv
   main-is:             Main.hs
-  -- other-modules:
+  other-modules:       Model
   -- other-extensions:
   build-depends:       base >=4.9 && <4.10
                      , containers >= 0.5.7.1
