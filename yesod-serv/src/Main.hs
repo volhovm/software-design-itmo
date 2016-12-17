@@ -29,7 +29,7 @@ import           Model                    (Task (..), TodoList (..), TodoRequest
 -- Control
 ----------------------------------------------------------------------------
 
-data TodoListRef = TodoListRef { fromTodoListRef :: IORef TodoList }
+newtype TodoListRef = TodoListRef { fromTodoListRef :: IORef TodoList }
 
 mkYesod "TodoListRef" [parseRoutes|
 / HomeR GET POST
