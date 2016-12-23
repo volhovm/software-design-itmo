@@ -1,0 +1,12 @@
+resolver: lts-7.9
+packages:
+- '.'
+- location:
+    git: https://github.com/serokell/universum
+    commit: d347ccf3605d0851dd0f7046fe63f364510ef1a0
+  extra-dep: true
+nix:
+  shell-file: shell.nix
+extra-deps: []
+flags: {}
+extra-package-dbs: []
