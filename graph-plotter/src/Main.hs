@@ -4,11 +4,12 @@
 
 module Main (main) where
 
-import           Class
 import           Control.Monad          (forM_)
 import           Control.Monad.IO.Class (liftIO)
 import           Data.Proxy             (Proxy (..))
 import           Diagrams               (runDiagramsM)
+
+import           Class
 
 runFullGraph :: forall m . MonadDrawGraph m => FilePath -> Int -> m ()
 runFullGraph filename n = do
@@ -18,4 +19,4 @@ runFullGraph filename n = do
 
 main = do
     runDiagramsM $ runFullGraph "kek1.png" 5
-    runDiagramsM $ runFullGraph "kek2.png" 5
+--    runDiagramsM $ runFullGraph "kek2.png" 5
