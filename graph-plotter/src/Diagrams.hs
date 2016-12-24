@@ -1,4 +1,3 @@
-{-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE RecordWildCards            #-}
 {-# LANGUAGE TemplateHaskell            #-}
@@ -7,12 +6,13 @@
 
 module Diagrams (DiagramsM, runDiagramsM) where
 
-import           Control.Lens                    (makeLenses, (%=))
-import           Control.Monad                   (void)
+import           Control.Lens                    (makeLenses, (%=), (.=))
+import           Control.Monad                   (forM_, void)
 import           Control.Monad.Extra             (whenJustM)
 import           Control.Monad.IO.Class          (MonadIO, liftIO)
 import           Control.Monad.State             (MonadState, StateT (..))
 import           Data.Default                    (Default (..))
+import           Data.List                       (nub)
 import           Data.Maybe                      (maybe)
 import           Diagrams.Backend.Cairo
 import           Diagrams.Backend.Cairo.Internal
@@ -42,18 +42,21 @@ mkGraph n vs es =
     arrowOpts = with & gaps .~ none & headLength .~ none
 
 mkNode :: Int -> Int -> Diagram B
-mkNode n k = circle 1 # named k # fc green # moveTo nodePos where
+mkNode n k = circle 0.2 # named k # fc white # moveTo nodePos where
     nodePos = polar2 (n' / 2, 2 * pi * k' / n')
     polar2 (r, φ) = p2 (r * cos φ, r * sin φ)
     n' = fromIntegral n
     k' = fromIntegral k
 
 instance MonadDrawGraph DiagramsM where
-    setGraphN n = dsN .= Just n
-    addNode i = whenJustM (use dsN) $ \n -> dsVertices %= (mkNode n i :)
-    addEdge i j = whenJustM (use dsN) $ \n -> dsEdges %= ((i,j) :)
-    dumpToFile filePath = do
+    loadGraph g = do
+        let (n, edges) = toGraph g
+        dsN .= (Just n)
+        let involvedNodes = nub $ concatMap (\(a,b) -> [a,b]) edges
+        forM_ involvedNodes $ \i -> dsVertices %= (mkNode n i :)
+        dsEdges .= edges
+    render filePath = do
         DiagramsState{..} <- use id
         let graph = mkGraph (length _dsVertices) _dsVertices _dsEdges
         liftIO $ fst $
-            renderDia Cairo (CairoOptions filePath (dims2D 30 200) PNG False) graph
+            renderDia Cairo (CairoOptions filePath (dims2D 500 500) PNG False) graph
