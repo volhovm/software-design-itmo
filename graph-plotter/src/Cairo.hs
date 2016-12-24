@@ -53,7 +53,7 @@ positionCenter width height n (fromInteger . fromIntegral -> i) =
     angle :: Double -> Double
     angle  k = (k / n) * 2*pi
     radius :: Double
-    radius = 1/3 * min width height
+    radius = 1/4 * min width height
 
 
 instance MonadDrawGraph CairoM where
@@ -64,7 +64,7 @@ instance MonadDrawGraph CairoM where
         h <- use cHeight
         let pos = positionCenter w h (fromIntegral n)
         forM_ edges $ \(u,v) -> drawLine (pos u) (pos v)
-        forM_ [0..n-1] $ \u -> drawCircle (pos u) 20
+        forM_ [0..n-1] $ \u -> drawCircle (pos u) 10
 
     render file = do
         w <- use cWidth
@@ -80,7 +80,7 @@ drawCircle (V2 x y) r = do
         C.setSourceRGB 0 0 0
         C.arc x y r 0 (2*pi)
 
-        C.setSourceRGB 1 0 0
+        C.setSourceRGB 1 1 0
         C.fill
         C.stroke
     ioref <- use renderR

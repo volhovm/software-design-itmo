@@ -18,6 +18,15 @@ runFullGraph filename n = do
     loadGraph graph
     render filename
 
+runTreeGraph :: forall m . MonadDrawGraph m => FilePath -> Int -> m ()
+runTreeGraph filename n = do
+    let graph = MatrixGraph n (\i j -> i == 0 && j > 0)
+    loadGraph graph
+    render filename
+
+
 main = do
-    runDiagramsM $ runFullGraph "kekDiagrams.png" 5
-    runCairoM $ runFullGraph "kekCairo.png" 5
+    runDiagramsM $ runFullGraph "drawDiagramsFull.png" 10
+    runCairoM $ runFullGraph "drawCairoFull.svg" 8
+    runDiagramsM $ runTreeGraph "drawDiagramsTree.png" 9
+    runCairoM $ runTreeGraph "drawCairoTree.svg" 7
