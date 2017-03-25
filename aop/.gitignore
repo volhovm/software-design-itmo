@@ -1,0 +1,10 @@
+.stack-work
+*#
+\#*
+*~
+.#*
+tmp/
+some.svg
+.hpc/
+*.tix
+dist/
