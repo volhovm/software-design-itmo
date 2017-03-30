@@ -14,7 +14,7 @@ cabal-version:       >=1.10
 
 executable actors-run
   main-is:             Main.hs
-  other-modules:       Model
+  other-modules:       Actors
   -- other-extensions:
   build-depends:       base >=4.9 && <4.10
                      , containers >= 0.5.7.1
@@ -22,6 +22,7 @@ executable actors-run
                      , http-types
                      , lens >= 4.14
                      , mtl >= 2.2.1
+                     , thespian 
                      , text >= 1.2.2.1
                      , universum
                      , wai
@@ -30,6 +31,16 @@ executable actors-run
                      , yesod-form >= 1.4.8
   hs-source-dirs:      src
   default-language:    Haskell2010
-  default-extensions:  NoImplicitPrelude
+  ghc-options:         -threaded -Wall
+  default-extensions:  DeriveGeneric
+                       GeneralizedNewtypeDeriving
+                       FlexibleContexts
+                       StandaloneDeriving
+                       NoImplicitPrelude
                        OverloadedStrings
                        RecordWildCards
+                       TypeApplications
+                       TupleSections
+                       ViewPatterns
+                       LambdaCase
+                       MultiWayIf

@@ -12,77 +12,57 @@
 
 module Main (main) where
 
-import           Control.Lens             ((%=))
-import qualified Control.Monad.State.Lazy (get, put)
-import           Data.Default             (def)
-import           Data.IORef               (IORef, modifyIORef, newIORef, readIORef,
-                                           writeIORef)
-import qualified Data.Map                 as M
+import qualified Data.Map          as M
 import           Universum
 import           Yesod
 import           Yesod.Form.Jquery
 
-import           Model                    (Task (..), TodoList (..), TodoRequest (..),
-                                           applyRequest, fromTDL, parseRequest)
+import           Actors
 
 ----------------------------------------------------------------------------
 -- Control
 ----------------------------------------------------------------------------
 
-newtype TodoListRef = TodoListRef { fromTodoListRef :: IORef TodoList }
+data PseudoSearch = PseudoSearch
 
-mkYesod "TodoListRef" [parseRoutes|
+mkYesod "PseudoSearch" [parseRoutes|
 / HomeR GET POST
 |]
 
-instance Yesod TodoListRef
-instance RenderMessage TodoListRef FormMessage where
+instance Yesod PseudoSearch
+instance RenderMessage PseudoSearch FormMessage where
     renderMessage _ _ = defaultFormMessage
-instance YesodJquery TodoListRef
+instance YesodJquery PseudoSearch
 
-todoForm :: Html -> MForm Handler (FormResult TodoRequest, Widget)
-todoForm = renderDivs $ TodoRequest <$> areq textField "Request: " Nothing
-
-
-instance MonadState TodoList (HandlerT TodoListRef IO) where
-    put x = do
-        ref <- fromTodoListRef <$> getYesod
-        liftIO $ writeIORef ref x
-    get = liftIO . readIORef =<< fromTodoListRef <$> getYesod
+todoForm :: Html -> MForm Handler (FormResult Text, Widget)
+todoForm = renderDivs $ areq textField "Request: " Nothing
 
 getHomeR :: Handler Html
 getHomeR = do
     -- Generate the form to be displayed
     (widget, enctype) <- generateFormPost todoForm
-    tdl <- use fromTDL
-    composed widget enctype Nothing tdl
+    composed widget enctype Nothing mempty
 
 postHomeR :: Handler Html
 postHomeR = do
     ((result, widget), enctype) <- runFormPost todoForm
-    tdl <- use fromTDL
-    header <- case result of
-        FormSuccess req ->
-            case parseRequest req of
-                Nothing -> pure $ failureHeader "Couldn't parse command"
-                Just k  -> do
-                    fromTDL %= applyRequest k
-                    pure $ successHeader
-        _ -> pure $ failureHeader "Couldn't process the form"
-    tdl' <- use fromTDL
-    composed widget enctype (Just header) tdl'
+    (searchRes,header) <- case result of
+        FormSuccess (req :: Text) -> do
+            resData <- liftIO $ searchData $ SearchRequest req
+            pure (resData, successHeader)
+        _ -> pure (mempty, failureHeader "Couldn't process the form")
+    composed widget enctype (Just header) searchRes
 
 ----------------------------------------------------------------------------
 -- View
 ----------------------------------------------------------------------------
 
-composed widget enctype header tdl = defaultLayout $ do
-    [whamlet|<p> TODOLIST v228.1|]
-    fromMaybe (pure ()) header
-    usage
-    submitForm widget enctype
-    tdlToHTML tdl
-
+composed widget enctype header (getSearchResponse -> searchResults) =
+    defaultLayout $ do
+        [whamlet|<p> TOP ACTOR-BASED SEARCH ENGINE|]
+        fromMaybe pass header
+        submitForm widget enctype
+        searchResultsToHTML searchResults
 
 submitForm widget enctype = do
     [whamlet|
@@ -90,7 +70,7 @@ submitForm widget enctype = do
         ^{widget}
         <br>
         <button>Submit
-    <p> This place will contain info about todolists hopefully:
+    <p> Responses:
     |]
 
 successHeader =
@@ -105,40 +85,20 @@ failureHeader reason =
       <br>Reason: #{reason}
     |]
 
---todosToHTML :: [Task] -> Handler Html
-tdlToHTML (M.assocs -> taskLists) = mapM_ (uncurry tasksToHTML) taskLists
+searchResultsToHTML m | M.null m = pass
+searchResultsToHTML (M.assocs -> taskLists) =
+    mapM_ (uncurry tasksToHTML) taskLists
   where
-    tasksToHTML taskListName tasks =
+    tasksToHTML searchEngineName searchResults =
         [whamlet|
-        <p> #{taskListName}
+        <p> #{searchEngineName}
         <ol>
-            $forall Task taskName isDone <- tasks
-                $if isDone
-                   <li>
-                       <font color="green">DONE
-                       #{taskName}
-                $else
-                   <li>
-                       <font color="red">TODO
-                       #{taskName}
-
+            $forall searchRes <- searchResults
+                #{searchRes}
         |]
---    showTask Task {..} =
---        bool "TODO" "DONE" taskIsComplete <> " " <> taskText
-
-usage =
-    [whamlet|
-     <p> List of commands:
-     <ul>
-       <li> addlist LISTNAME
-       <li> addtask LISTNAME TASKNAME
-       <li> rmlist LISTNAME
-       <li> toggle LISTNAME TASKINDEX
-    |]
-
 
 ----------------------------------------------------------------------------
 -- Executable
 ----------------------------------------------------------------------------
 
-main = warp 3000 =<< (TodoListRef <$> newIORef def)
+main = warp 11000 PseudoSearch

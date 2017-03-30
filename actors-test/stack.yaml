@@ -6,6 +6,7 @@ packages:
 extra-deps:
 - universum-0.3
 - log-warper-1.0.4
+- thespian-0.999
 
 nix:
   shell-file: shell.nix
