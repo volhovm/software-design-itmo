@@ -1,0 +1,11 @@
+resolver: lts-8.5
+
+packages:
+- '.'
+
+extra-deps:
+- universum-0.3
+- log-warper-1.0.4
+
+nix:
+  shell-file: shell.nix
