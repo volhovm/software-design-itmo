@@ -18,6 +18,7 @@ import           Yesod
 import           Yesod.Form.Jquery
 
 import           Actors
+import           SearchEngineStub  (forkEngines)
 
 ----------------------------------------------------------------------------
 -- Control
@@ -101,4 +102,8 @@ searchResultsToHTML (M.assocs -> taskLists) =
 -- Executable
 ----------------------------------------------------------------------------
 
-main = warp 11000 PseudoSearch
+main = do
+    putText "Forking stub servers"
+    forkEngines False
+    putText "Serving main search engine"
+    warp 11000 PseudoSearch

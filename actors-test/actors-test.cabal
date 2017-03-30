@@ -15,18 +15,23 @@ cabal-version:       >=1.10
 executable actors-run
   main-is:             Main.hs
   other-modules:       Actors
+                     , SearchEngineStub
   -- other-extensions:
-  build-depends:       base >=4.9 && <4.10
+  build-depends:       aeson >= 1.0.2.1
+                     , base >=4.9 && <4.10
                      , containers >= 0.5.7.1
                      , data-default
                      , http-types
                      , lens >= 4.14
                      , mtl >= 2.2.1
-                     , thespian 
+                     , random >= 1.1
+                     , scotty
                      , text >= 1.2.2.1
+                     , thespian
                      , universum
                      , wai
                      , warp
+                     , wreq
                      , yesod
                      , yesod-form >= 1.4.8
   hs-source-dirs:      src

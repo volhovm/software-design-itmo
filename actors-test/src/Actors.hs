@@ -8,24 +8,29 @@ module Actors
        ) where
 
 import           Control.Concurrent.Actor
+import           Data.Aeson               (toJSON)
 import qualified Data.Map                 as M
-import qualified Data.Text                as T
+import           Network.Wreq             (asJSON, post, responseBody)
 import           Universum
 
-type SearchEngineName = Text
+import           SearchEngineStub         (SearchEngineName, searchEngines)
+
 newtype SearchRequest = SearchRequest Text
 newtype SearchResponse = SearchResponse
     { getSearchResponse :: Map SearchEngineName [Text]
     } deriving (Show,Eq,Monoid)
 
-searchEngines :: [(SearchEngineName, Text -> String)]
-searchEngines =
-    [ ("Google", \x -> "https://google.com/#q=" <> T.unpack x <> "&*") ]
+querySearchEngine :: String -> Text -> IO [Text]
+querySearchEngine host req = do
+    r <- asJSON =<< post host (toJSON req)
+    pure $ r ^. responseBody
 
 searchData :: SearchRequest -> IO SearchResponse
 searchData (SearchRequest t) =
-    pure $ SearchResponse $ M.fromList
-        [("Google", ["Couldn't find anything for ya: " <> t]), ("Yandex", [])]
+    fmap (SearchResponse . M.fromList) $
+    forM searchEngines $ \(ename,host) -> do
+        res <- querySearchEngine host t
+        pure (ename, res)
 
 actor1 :: Text -> Actor
 actor1 = undefined
