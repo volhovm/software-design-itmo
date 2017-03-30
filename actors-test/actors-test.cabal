@@ -16,6 +16,7 @@ executable actors-run
   main-is:             Main.hs
   other-modules:       Actors
                      , SearchEngineStub
+                     , Internal
   -- other-extensions:
   build-depends:       aeson >= 1.0.2.1
                      , base >=4.9 && <4.10
@@ -27,7 +28,6 @@ executable actors-run
                      , random >= 1.1
                      , scotty
                      , text >= 1.2.2.1
-                     , thespian
                      , universum
                      , wai
                      , warp
@@ -36,7 +36,7 @@ executable actors-run
                      , yesod-form >= 1.4.8
   hs-source-dirs:      src
   default-language:    Haskell2010
-  ghc-options:         -threaded -Wall
+  ghc-options:         -threaded
   default-extensions:  DeriveGeneric
                        GeneralizedNewtypeDeriving
                        FlexibleContexts

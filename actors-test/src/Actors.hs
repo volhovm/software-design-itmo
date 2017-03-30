@@ -1,3 +1,5 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 -- | Module containing actors performing query tasks
 
 module Actors
@@ -7,13 +9,14 @@ module Actors
        , searchData
        ) where
 
-import           Control.Concurrent.Actor
-import           Data.Aeson               (toJSON)
-import qualified Data.Map                 as M
-import           Network.Wreq             (asJSON, post, responseBody)
+import           Data.Aeson       (toJSON)
+import           Data.IORef       (atomicModifyIORef', newIORef, readIORef)
+import qualified Data.Map         as M
+import           Network.Wreq     (asJSON, post, responseBody)
 import           Universum
 
-import           SearchEngineStub         (SearchEngineName, searchEngines)
+import           Internal
+import           SearchEngineStub (SearchEngineName, searchEngines)
 
 newtype SearchRequest = SearchRequest Text
 newtype SearchResponse = SearchResponse
@@ -26,11 +29,32 @@ querySearchEngine host req = do
     pure $ r ^. responseBody
 
 searchData :: SearchRequest -> IO SearchResponse
-searchData (SearchRequest t) =
-    fmap (SearchResponse . M.fromList) $
-    forM searchEngines $ \(ename,host) -> do
-        res <- querySearchEngine host t
-        pure (ename, res)
+searchData (SearchRequest t) = evolve $ masterActor t
 
-actor1 :: Text -> Actor
-actor1 = undefined
+masterActor :: Text -> ActorM SearchResponse
+masterActor req = do
+    me <- self
+    results <- liftIO $ newIORef ([] :: [(SearchEngineName, [Text])])
+    forM_ searchEngines $ \(ename,host) ->
+        liftIO $ spawn $ slaveActor me ename host req
+    let notFull = (< length searchEngines) . length <$> liftIO (readIORef results)
+    let exitTimeout = error "master: timeout exception"
+    let masterHandlers =
+            [ Case $ \(p@(n,_) :: (Text, [Text])) -> do
+                  putText $ "master: got response from search engine: " <> n
+                  liftIO $ atomicModifyIORef' results(\a -> (p:a, ()))
+            , Case $ \(e :: RemoteException) -> do
+                  putText $ "master: got remoteexception, exiting: " <> show e
+                  error ":("
+            ]
+    whileM notFull $ receiveWithTimeout (5 * 1000000) masterHandlers exitTimeout
+    SearchResponse . M.fromList <$> liftIO (readIORef results)
+  where
+    whileM cond action = do
+        ifM cond (action >> whileM cond action) pass
+
+slaveActor :: Address -> Text -> String -> Text -> Actor
+slaveActor masterAddr seName host req = do
+    monitor masterAddr
+    results <- liftIO $ querySearchEngine host req
+    send masterAddr (seName, results)
