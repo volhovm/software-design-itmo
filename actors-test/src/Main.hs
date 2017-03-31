@@ -95,7 +95,7 @@ searchResultsToHTML (M.assocs -> taskLists) =
         <p> #{searchEngineName}
         <ol>
             $forall searchRes <- searchResults
-                #{searchRes}
+                #{searchRes}</br>
         |]
 
 ----------------------------------------------------------------------------
