@@ -104,6 +104,6 @@ searchResultsToHTML (M.assocs -> taskLists) =
 
 main = do
     putText "Forking stub servers"
-    forkEngines False
+    forkEngines True
     putText "Serving main search engine"
     warp 11000 PseudoSearch
